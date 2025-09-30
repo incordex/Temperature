@@ -30,4 +30,41 @@ function getFunctionSelectorSha3(functionSignature, bytesToTake = 4)
   return selector;
 }
 
+console.log('transfer(address,uint256):', getFunctionSelectorSha3('transfer(address,uint256)'));
+
+```
+
+## Browser-compatible (Web Crypto API implementation)
+
+```javascript
+async function getSHA256Selector(functionSignature, bytesToTake = 4)
+{
+  const encoder = new TextEncoder();
+  const data = encoder.encode(functionSignature);
+  
+  // This uses SHA-256, NOT Keccak-256 (different algorithm!)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = new Uint8Array(hashBuffer);
+  
+  // Convert first N bytes to hex
+  const firstBytes = hashArray.slice(0, bytesToTake);
+  const hex = '0x' + Array.from(firstBytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  return hex;
+}
+
+// getSHA256Selector('transfer(address,uint256)').then(console.log);
+
+// ============================================================================
+// Utility function to create function signatures from ABI
+function createFunctionSignature(functionName, paramTypes) {
+  return `${functionName}(${paramTypes.join(',')})`;
+}
+
+// Example usage
+const signature = createFunctionSignature('transferFrom', ['address', 'address', 'uint256']);
+console.log('\nGenerated signature:', signature);
+console.log('Selector:', getFunctionSelector(signature));
 ```
